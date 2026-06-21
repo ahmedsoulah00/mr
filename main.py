@@ -11,7 +11,7 @@ from telebot import types
 import time
 
 TOKEN = '8847026836:AAGstxciNm_OzoUZ5HStB65dZXyhN4A4Nyw' # توكن البوت الخاص بك
-ADMIN_ID = '7119011124' # تم تثبيت الأيدي الخاص بك هنا كمسؤول
+ADMIN_ID = '7119011124' # الأيدي الخاص بك كمسؤول
 
 bot = telebot.TeleBot(TOKEN)
 uploaded_files_dir = 'uploaded_bots'
@@ -23,10 +23,10 @@ if not os.path.exists(uploaded_files_dir):
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    # تم إزالة فحص الاشتراك لفتح البوت مباشرة عند إرسال /start
     markup = types.InlineKeyboardMarkup()
     upload_button = types.InlineKeyboardButton('📤 رفع ملف', callback_data='upload')
-    dev_channel_button = types.InlineKeyboardButton('🔧 حساب المطور', url='https://t.me/BBH_S')
+    # تم تحديث معرف المطور هنا بناءً على طلبك
+    dev_channel_button = types.InlineKeyboardButton('🔧 حساب المطور', url='https://t.me/DDarkNetConfigs_1')
     speed_button = types.InlineKeyboardButton('⚡ سرعة البوت', callback_data='speed')
     markup.add(upload_button)
     markup.add(speed_button, dev_channel_button)
